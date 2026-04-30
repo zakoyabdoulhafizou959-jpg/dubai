@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Dubai Magic - Jeu de la Roue</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a472a 0%, #0e2a1a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', 'Roboto', sans-serif;
+            padding: 20px;
+        }
+
+        .main-container {
+            max-width: 550px;
+            width: 100%;
+        }
+
+        .auth-container {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            padding: 40px;
+            border: 2px solid #ffd966;
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .auth-title {
+            text-align: center;
+            color: #ffd966;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: #2c1e12;
+            color: #ffefb9;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: #f5a623;
+            color: #2c1a05;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form input, .auth-form select {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 30px;
+            border: none;
+            background: #3d3224;
+            color: #ffefb3;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .auth-form input::placeholder {
+            color: #aa9a7a;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 15px;
+            background: #f5a623;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c1a05;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.2s;
+        }
+
+        .auth-form button:active {
+            transform: scale(0.98);
+        }
+
+        .error-msg {
+            color: #ff8a7a;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .info-text {
+            text-align: center;
+            color: #ffefb0;
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+
+        .game-container {
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px);
+            border-radius: 80px;
+            padding: 20px;
+            border: 1px solid rgba(255,215,0,0.4);
+        }
+
+        .game-panel {
+            background: #2c1e12;
+            border-radius: 65px;
+            padding: 20px;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.3);
+            border: 1px solid #f3b33d;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #000000aa;
+            border-radius: 50px;
+            padding: 10px 20px;
+            margin-bottom: 15px;
+            color: #ffd966;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .logout-btn {
+            background: #8b3a3a;
+            padding: 5px 15px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+
+        .logout-btn:active {
+            transform: scale(0.95);
+        }
+
+        .wheel-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        canvas {
+            background: #2d2418;
+            border-radius: 50%;
+            box-shadow: 0 0 0 8px #e9b35f, 0 0 0 12px #aa7a3c;
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            cursor: pointer;
+        }
+
+        .bank-section {
+            background: #000000aa;
+            border-radius: 100px;
+            padding: 8px 20px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .balance {
+            font-size: 1.9rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #FFD966, #FFB347);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .bet-control {
+            display: flex;
+            gap: 12px;
+            background: #221c14;
+            padding: 6px 15px;
+            border-radius: 60px;
+            align-items: center;
+        }
+
+        .bet-amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #f7d44a;
+            min-width: 100px;
+            text-align: center;
+        }
+
+        button {
+            background: #ffcd7e;
+            border: none;
+            font-size: 1.4rem;
+            font-weight: bold;
+            padding: 6px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #8b5a2b;
+            transition: 0.05s linear;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #8b5a2b;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            transform: none;
+            cursor: not-allowed;
+        }
+
+        .btn-spin {
+            background: #f5a623;
+            font-size: 1.7rem;
+            padding: 12px 25px;
+            width: 100%;
+            margin-top: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: #2c5a2e;
+            box-shadow: 0 4px 0 #1a3a1a;
+            color: #ffefb9;
+            font-size: 1.2rem;
+        }
+
+        .message-area {
+            background: #1f1710e0;
+            border-radius: 60px;
+            padding: 12px;
+            margin-top: 18px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            color: #ffeaac;
+        }
+
+        .stats-area {
+            background: #00000066;
+            border-radius: 30px;
+            padding: 12px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #ffd966;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #ffefb0;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .game-counter {
+            background: linear-gradient(135deg, #f5a623, #ffd966);
+            border-radius: 50px;
+            padding: 8px 20px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #1a1a2e;
+        }
+
+        .counter-label {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .counter-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            font-family: monospace;
+            background: #1a1a2e;
+            padding: 5px 15px;
+            border-radius: 40px;
+            color: #ffd966;
+            letter-spacing: 2px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2a2418, #1f1a12);
+            border-radius: 50px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            border: 2px solid #f3b33d;
+            color: #ffefcf;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            color: #ffd966;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input, .modal-content select {
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            border-radius: 60px;
+            border: none;
+            background: #3d3224;
+            color: #ffefb3;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .modal-content .warning-text {
+            font-size: 0.7rem;
+            color: #ffae9e;
+            margin-top: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            font-size: 1rem;
+            padding: 12px;
+        }
+
+        .win { color: #b5ff7c; }
+        .lose { color: #ffae9e; }
+        .bonus { color: #7effdb; }
+        .small-win { color: #ffd966; }
+        .super-win { color: #ff6600; text-shadow: 0 0 5px gold; }
+
+        footer {
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 15px;
+            color: #ddb582;
+        }
+
+        .payment-info {
+            background: #f5a62320;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ffd966;
+        }
+
+        .payment-info p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        /* Animation de vibration CSS */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .vibrate {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @media (max-width: 500px) {
+            .game-panel { padding: 15px; }
+            .balance { font-size: 1.4rem; }
+            .bet-amount { font-size: 1.3rem; min-width: 80px; }
+            button { padding: 4px 12px; font-size: 1.2rem; }
+            .btn-spin { font-size: 1.3rem; padding: 10px; }
+            .auth-container { padding: 25px; }
+            .counter-number { font-size: 1.3rem; padding: 3px 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container" id="app">
+    <div id="authPage">
+        <div class="auth-container">
+            <div class="logo">🎰 DUBAI MAGIC</div>
+            <div class="auth-title">Bienvenue</div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showAuthTab('login')">Connexion</button>
+                <button class="tab-btn" onclick="showAuthTab('register')">Inscription</button>
+            </div>
+            <div id="loginForm" class="auth-form active">
+                <input type="text" id="loginPhone" placeholder="Numéro de téléphone" maxlength="15">
+                <input type="password" id="loginPassword" placeholder="Mot de passe (8 chiffres)" maxlength="8" pattern="[0-9]{8}" inputmode="numeric">
+                <button onclick="login()">Se connecter</button>
+                <div id="loginError" class="error-msg"></div>
+            </div>
+            <div id="registerForm" class="auth-form">
+                <input type="text" id="regName" placeholder="Nom complet" required>
+                <input type="text" id="regPhone" placeholder="Numéro de téléphone" required>
+                <select id="regCountry">
+                    <option value="CI">🇨🇮 Côte d'Ivoire</option>
+                    <option value="SN">🇸🇳 Sénégal</option>
+                    <option value="CM">🇨🇲 Cameroun</option>
+                    <option value="ML">🇲🇱 Mali</option>
+                    <option value="BF">🇧🇫 Burkina Faso</option>
+                    <option value="TG">🇹🇬 Togo</option>
+                    <option value="BJ">🇧🇯 Bénin</option>
+                    <option value="NE">🇳🇪 Niger</option>
+                    <option value="GN">🇬🇳 Guinée</option>
+                    <option value="GA">🇬🇦 Gabon</option>
+                </select>
+                <input type="password" id="regPassword" placeholder="Mot de passe (8 chiffres)" maxlength="8" pattern="[0-9]{8}" inputmode="numeric">
+                <input type="password" id="regConfirmPassword" placeholder="Confirmer mot de passe" maxlength="8">
+                <button onclick="register()">S'inscrire</button>
+                <div id="registerError" class="error-msg"></div>
+            </div>
+            <div class="info-text">⚠️ Mot de passe : 8 chiffres uniquement<br>💰 Mise minimum : 50 FCFA | Gain possible x33</div>
+        </div>
+    </div>
+
+    <div id="gamePage" style="display:none">
+        <div class="game-container">
+            <div class="game-panel">
+                <div class="user-info">
+                    <span class="user-name" id="userName">Chargement...</span>
+                    <span class="logout-btn" onclick="logout()">🚪 Déconnexion</span>
+                </div>
+                <div class="wheel-wrapper">
+                    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+                </div>
+                <div class="bank-section">
+                    <div>💰 <span class="balance" id="balanceAmount">0</span> FCFA</div>
+                    <div class="bet-control">
+                        <button id="decBet">-</button>
+                        <span id="betValue" class="bet-amount">5 000</span>
+                        <button id="incBet">+</button>
+                    </div>
+                </div>
+                <div class="stats-area">
+                    <div class="stat-item"><div class="stat-label">🏆 GAINS</div><div class="stat-value" id="totalGains">0 FCFA</div></div>
+                    <div class="stat-item"><div class="stat-label">💔 PERTES</div><div class="stat-value" id="totalLosses">0 FCFA</div></div>
+                </div>
+                <div class="game-counter">
+                    <span class="counter-label">🎲 NOMBRE DE PARTIES JOUÉES</span>
+                    <span class="counter-number" id="gameCountDisplay">0</span>
+                </div>
+                <button id="spinBtn" class="btn-spin">🎡 DÉMARRER 🎲</button>
+                <div class="action-buttons">
+                    <button id="depositBtn" class="action-btn">🏧 DÉPÔT</button>
+                    <button id="withdrawBtn" class="action-btn">💸 RETRAIT</button>
+                </div>
+                <div id="messageBox" class="message-area">Bienvenue dans Dubai Magic ! Gains jusqu'à x33 🚀</div>
+                <footer>💰 Mise minimum 50 FCFA | +66% | +16% | BONUS | x33 🔥</footer>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="depositModal" class="modal">
+    <div class="modal-content">
+        <h2>🏦 DEMANDE DE DÉPÔT</h2>
+        <div class="payment-info">
+            <p>📞 <strong style="color:#FFD966;">Moyen de paiement : AMANATA</strong></p>
+            <p>💰 Envoyez l'argent au numéro : <strong style="color:#7effdb; font-size:1.2rem;">98790361</strong></p>
+            <p>👤 Nom du compte : <strong>DUBAI MAGIC</strong></p>
+        </div>
+        <input type="number" id="depositAmount" placeholder="Montant à déposer (FCFA)" min="1000">
+        <div style="margin: 10px 0;">
+            <input type="text" id="depositCode" placeholder="🔑 CODE D'ENVOI (Numéro de transaction)" style="font-family: monospace; letter-spacing: 2px;" autocomplete="off">
+            <div class="warning-text">⚠️ Entrez le code de transaction reçu après votre envoi</div>
+        </div>
+        <div class="modal-buttons">
+            <button id="confirmDepositBtn" style="background:#f5a623;">✅ SOUMETTRE LA DEMANDE</button>
+            <button id="closeDepositModal" style="background:#8b3a3a;">❌ ANNULER</button>
+        </div>
+    </div>
+</div>
+
+<div id="withdrawModal" class="modal">
+    <div class="modal-content">
+        <h2>💸 DEMANDE DE RETRAIT</h2>
+        <p>💰 Solde : <strong id="showBalanceModal" style="color:#FFD966;">0 FCFA</strong></p>
+        <div class="payment-info">
+            <p>📞 <strong style="color:#FFD966;">Moyen de paiement : AMANATA</strong></p>
+            <p>💸 Retrait via le même numéro que votre inscription</p>
+        </div>
+        <input type="number" id="withdrawAmount" placeholder="Montant (FCFA)" min="1500" max="50000">
+        <div class="warning-text">⚠️ Minimum : 1 500 FCFA | Maximum : 50 000 FCFA</div>
+        <div class="modal-buttons">
+            <button id="confirmWithdrawBtn" style="background:#f5a623;">📤 SOUMETTRE</button>
+            <button id="closeWithdrawModal" style="background:#8b3a3a;">❌ ANNULER</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCxsXpj3ovdd2Wu5HNHN1Zyvf7qG00aXx4",
+        authDomain: "dubai-dbd3f.firebaseapp.com",
+        projectId: "dubai-dbd3f",
+        storageBucket: "dubai-dbd3f.firebasestorage.app",
+        messagingSenderId: "543622740538",
+        appId: "1:543622740538:web:68ec2428ced2acc2dad303"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let balance = 0, totalGains = 0, totalLosses = 0, gameCount = 0;
+    let currentBet = 5000;
+    let isSpinning = false;
+    let currentRotation = 0;
+    let animationId = null;
+
+    // ========== SYSTÈME DE SONS (Web Audio API) ==========
+    let audioContext = null;
+    
+    // Initialiser l'audio (nécessite une interaction utilisateur)
+    function initAudio() {
+        if (!audioContext && window.AudioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+    
+    // Jouer un son de clic
+    function playClickSound() {
+        try {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 880;
+            gainNode.gain.value = 0.2;
+            oscillator.type = 'sine';
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        } catch(e) { console.log("Audio non disponible"); }
+    }
+    
+    // Son de victoire (gros gain)
+    function playWinSound() {
+        try {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            // Son de victoire - mélodie simple
+            const frequencies = [523.25, 659.25, 783.99];
+            frequencies.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = freq;
+                gainNode.gain.value = 0.15;
+                oscillator.type = 'sine';
+                oscillator.start(audioContext.currentTime + index * 0.15);
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + index * 0.15 + 0.5);
+                oscillator.stop(audioContext.currentTime + index * 0.15 + 0.5);
+            });
+        } catch(e) { console.log("Audio non disponible"); }
+    }
+    
+    // Son de perte
+    function playLoseSound() {
+        try {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 220;
+            gainNode.gain.value = 0.15;
+            oscillator.type = 'sawtooth';
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        } catch(e) { console.log("Audio non disponible"); }
+    }
+    
+    // Son super gain (x33)
+    function playSuperWinSound() {
+        try {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            // Fanfare de victoire
+            const frequencies = [523.25, 659.25, 783.99, 1046.50];
+            frequencies.forEach((freq, index) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = freq;
+                gainNode.gain.value = 0.2;
+                oscillator.type = 'triangle';
+                oscillator.start(audioContext.currentTime + index * 0.12);
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + index * 0.12 + 0.8);
+                oscillator.stop(audioContext.currentTime + index * 0.12 + 0.8);
+            });
+        } catch(e) { console.log("Audio non disponible"); }
+    }
+    
+    // Son bonus
+    function playBonusSound() {
+        try {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 698.46;
+            gainNode.gain.value = 0.15;
+            oscillator.type = 'sine';
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.4);
+            oscillator.stop(audioContext.currentTime + 0.4);
+            // Deuxième note
+            setTimeout(() => {
+                const osc2 = audioContext.createOscillator();
+                const gain2 = audioContext.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioContext.destination);
+                osc2.frequency.value = 880;
+                gain2.gain.value = 0.15;
+                osc2.type = 'sine';
+                osc2.start();
+                gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.4);
+                osc2.stop(audioContext.currentTime + 0.4);
+            }, 200);
+        } catch(e) { console.log("Audio non disponible"); }
+    }
+    
+    // Son de rotation (début du spin)
+    function playSpinSound() {
+        try {
+            if (!audioContext) {
+                initAudio();
+            }
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 440;
+            gainNode.gain.value = 0.1;
+            oscillator.type = 'sine';
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch(e) { console.log("Audio non disponible"); }
+    }
+    
+    // ========== FONCTION VIBRATION ==========
+    function vibrate(pattern) {
+        if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(pattern);
+        }
+    }
+    
+    // Vibration pour perte
+    function vibrateLose() {
+        vibrate([100, 50, 100]);
+    }
+    
+    // Vibration pour gain
+    function vibrateWin() {
+        vibrate([100, 50, 200, 50, 100]);
+    }
+    
+    // Vibration super gain
+    function vibrateSuperWin() {
+        vibrate([200, 100, 200, 100, 300, 100, 200]);
+    }
+    
+    // Vibration bonus
+    function vibrateBonus() {
+        vibrate([80, 80, 80]);
+    }
+    
+    // Vibration clic
+    function vibrateClick() {
+        vibrate(20);
+    }
+
+    // Configuration du disque
+    const SECTOR_TYPES = [
+        "SUPER_GAIN", "PERDANT", "GROS_GAIN", "PERDANT",
+        "BONUS", "PERDANT", "PETIT_GAIN", "PERDANT"
+    ];
+    
+    const COLOR_SUPER_GAIN = "#FF4444";
+    const COLOR_GROS_GAIN = "#F4C542";
+    const COLOR_BONUS = "#6A9FB5";
+    const COLOR_PETIT_GAIN = "#CD7F32";
+    const COLOR_PERDANT = "#6B6B6B";
+
+    function getSectorColor(type) {
+        if (type === "SUPER_GAIN") return COLOR_SUPER_GAIN;
+        if (type === "GROS_GAIN") return COLOR_GROS_GAIN;
+        if (type === "BONUS") return COLOR_BONUS;
+        if (type === "PETIT_GAIN") return COLOR_PETIT_GAIN;
+        return COLOR_PERDANT;
+    }
+
+    function getSectorSymbol(type) {
+        if (type === "SUPER_GAIN") return "💎";
+        if (type === "GROS_GAIN") return "🏆";
+        if (type === "BONUS") return "🔄";
+        if (type === "PETIT_GAIN") return "⭐";
+        return "💀";
+    }
+
+    function getSectorLabel(type) {
+        if (type === "SUPER_GAIN") return "x33";
+        if (type === "GROS_GAIN") return "+66%";
+        if (type === "BONUS") return "REMB";
+        if (type === "PETIT_GAIN") return "+16%";
+        return "PERD";
+    }
+
+    function calculateResult(betAmount, sectorType) {
+        switch(sectorType) {
+            case "SUPER_GAIN":
+                const totalWin33 = betAmount * 33;
+                const profit33 = totalWin33 - betAmount;
+                return { win: true, delta: profit33, newBalanceChange: totalWin33, 
+                    message: `💎💎💎 SUPER GAIN x33 !!! +${profit33.toLocaleString('fr-FR')} FCFA 💎💎💎`, 
+                    cssClass: "super-win" };
+            case "GROS_GAIN":
+                const totalWin = betAmount * (1 + 2/3);
+                const profitGros = totalWin - betAmount;
+                return { win: true, delta: profitGros, newBalanceChange: totalWin, 
+                    message: `🏆 GROS GAIN +66% ! +${profitGros.toLocaleString('fr-FR')} FCFA 🏆`, 
+                    cssClass: "win" };
+            case "BONUS":
+                return { win: null, delta: 0, newBalanceChange: betAmount, 
+                    message: `🔄 BONUS ! Remboursement intégral de ${betAmount.toLocaleString('fr-FR')} FCFA 🔄`, 
+                    cssClass: "bonus" };
+            case "PETIT_GAIN":
+                const smallWinAmount = betAmount * (1 + 1/6);
+                const profitSmall = smallWinAmount - betAmount;
+                return { win: true, delta: profitSmall, newBalanceChange: smallWinAmount, 
+                    message: `⭐ PETIT GAIN +16% ! +${profitSmall.toLocaleString('fr-FR')} FCFA ⭐`, 
+                    cssClass: "small-win" };
+            default:
+                return { win: false, delta: -betAmount, newBalanceChange: 0, 
+                    message: `💀 PERDU ! -${betAmount.toLocaleString('fr-FR')} FCFA 💀`, 
+                    cssClass: "lose" };
+        }
+    }
+
+    function drawWheel(rotationDeg) {
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width, h = canvas.height;
+        const centerX = w/2, centerY = h/2;
+        const radius = w * 0.44;
+        ctx.clearRect(0, 0, w, h);
+        const angleStep = (Math.PI * 2) / 8;
+        
+        for (let i = 0; i < 8; i++) {
+            const startAngle = i * angleStep + rotationDeg * Math.PI/180;
+            const endAngle = (i+1) * angleStep + rotationDeg * Math.PI/180;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fillStyle = getSectorColor(SECTOR_TYPES[i]);
+            ctx.fill();
+            ctx.strokeStyle = "#2b2118";
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+            
+            const midAngle = startAngle + angleStep/2;
+            const textRadius = radius * 0.68;
+            const xTxt = centerX + Math.cos(midAngle) * textRadius;
+            const yTxt = centerY + Math.sin(midAngle) * textRadius;
+            ctx.font = `bold ${Math.floor(radius * 0.12)}px "Segoe UI"`;
+            ctx.fillStyle = "#1f1a14";
+            ctx.fillText(getSectorSymbol(SECTOR_TYPES[i]), xTxt-12, yTxt+8);
+            ctx.font = `${Math.floor(radius * 0.09)}px monospace`;
+            ctx.fillStyle = "#f7f3e0";
+            ctx.fillText(getSectorLabel(SECTOR_TYPES[i]), xTxt-18, yTxt-8);
+        }
+        
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.18, 0, 2*Math.PI);
+        ctx.fillStyle = "#EFC88B";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius * 0.11, 0, 2*Math.PI);
+        ctx.fillStyle = "#b57c1c";
+        ctx.fill();
+        
+        const needleX = centerX, needleY = centerY - radius - 10;
+        ctx.beginPath();
+        ctx.moveTo(centerX-12, needleY+2);
+        ctx.lineTo(centerX, needleY-15);
+        ctx.lineTo(centerX+12, needleY+2);
+        ctx.fillStyle = "#E32F2F";
+        ctx.fill();
+        ctx.fillStyle = "#FFA500";
+        ctx.beginPath();
+        ctx.arc(centerX, needleY-2, 6, 0, 2*Math.PI);
+        ctx.fill();
+    }
+
+    function getCurrentSectorType(rotationDeg) {
+        const needleAngle = -Math.PI / 2;
+        let angleInDisk = (needleAngle - rotationDeg * Math.PI/180);
+        angleInDisk = ((angleInDisk % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+        const sectorIndex = Math.floor(angleInDisk / ((2*Math.PI)/8)) % 8;
+        return SECTOR_TYPES[sectorIndex];
+    }
+
+    async function saveUserGameData() {
+        if (!currentUser) return;
+        await db.collection('users').doc(currentUser.userId).update({
+            balance, totalGains, totalLosses, gameCount
+        });
+    }
+
+    // FONCTION PRINCIPALE AVEC SONS ET VIBRATIONS
+    async function spinGame() {
+        if (isSpinning) {
+            document.getElementById('messageBox').innerHTML = "⏳ Le disque tourne déjà, attendez la fin !";
+            vibrateClick();
+            return;
+        }
+        
+        if (balance <= 0) {
+            document.getElementById('messageBox').innerHTML = "❌ Solde insuffisant. Faites un dépôt !";
+            vibrateLose();
+            playLoseSound();
+            return;
+        }
+        if (currentBet > balance) {
+            document.getElementById('messageBox').innerHTML = "⚠️ Mise trop élevée !";
+            vibrateLose();
+            playLoseSound();
+            return;
+        }
+
+        // Activer l'audio au premier clic (nécessaire sur mobile)
+        initAudio();
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        
+        // Son de rotation et vibration courte
+        playSpinSound();
+        vibrate(50);
+        
+        isSpinning = true;
+        const spinBtn = document.getElementById('spinBtn');
+        spinBtn.disabled = true;
+        
+        balance -= currentBet;
+        await saveUserGameData();
+        updateGameUI();
+
+        const randomExtra = Math.floor(Math.random() * 360);
+        const fullTurns = 5 + Math.floor(Math.random() * 4);
+        const totalDeltaDeg = 360 * fullTurns + randomExtra;
+        const startRotation = currentRotation;
+        const targetRotation = (startRotation + totalDeltaDeg) % 360;
+        
+        const startTime = performance.now();
+        const duration = 2000;
+        
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+        }
+        
+        function animate(now) {
+            const elapsed = now - startTime;
+            let t = Math.min(1, elapsed / duration);
+            const easeOut = 1 - Math.pow(1 - t, 3);
+            const currentRot = startRotation + (totalDeltaDeg * easeOut);
+            currentRotation = currentRot % 360;
+            drawWheel(currentRotation);
+            
+            if (t < 1) {
+                animationId = requestAnimationFrame(animate);
+            } else {
+                animationId = null;
+                currentRotation = targetRotation;
+                drawWheel(currentRotation);
+                
+                const sectorType = getCurrentSectorType(currentRotation);
+                const result = calculateResult(currentBet, sectorType);
+                
+                // Appliquer les gains/pertes avec sons et vibrations
+                if (result.win === true) {
+                    balance += result.newBalanceChange;
+                    totalGains += result.delta;
+                    if (sectorType === "SUPER_GAIN") {
+                        playSuperWinSound();
+                        vibrateSuperWin();
+                    } else {
+                        playWinSound();
+                        vibrateWin();
+                    }
+                } else if (result.win === null) {
+                    balance += currentBet;
+                    playBonusSound();
+                    vibrateBonus();
+                } else {
+                    totalLosses += currentBet;
+                    playLoseSound();
+                    vibrateLose();
+                }
+                gameCount++;
+                
+                updateGameUI();
+                saveUserGameData();
+                
+                // Vibration et son supplémentaires pour le résultat
+                const messageDiv = document.getElementById('messageBox');
+                messageDiv.innerHTML = `${result.message}<br>💰 Nouveau solde: ${Math.floor(balance).toLocaleString('fr-FR')} FCFA<br>🎲 Parties jouées: ${gameCount}`;
+                
+                // Effet de vibration visuelle sur le message
+                messageDiv.classList.add('vibrate');
+                setTimeout(() => messageDiv.classList.remove('vibrate'), 300);
+                
+                isSpinning = false;
+                spinBtn.disabled = false;
+                
+                // Retour vocal pour les aveugles/malvoyants
+                if (window.speechSynthesis) {
+                    let speechMsg = "";
+                    if (sectorType === "SUPER_GAIN") speechMsg = `SUPER GAIN ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
+                    else if (sectorType === "GROS_GAIN") speechMsg = `Gros gain ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
+                    else if (sectorType === "PETIT_GAIN") speechMsg = `Petit gain ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
+                    else if (sectorType === "BONUS") speechMsg = `Bonus ! Remboursement de ${currentBet.toLocaleString('fr-FR')} Francs CFA`;
+                    else speechMsg = `Perdu ! Vous perdez ${currentBet.toLocaleString('fr-FR')} Francs CFA`;
+                    
+                    const utterance = new SpeechSynthesisUtterance(speechMsg);
+                    utterance.lang = 'fr-FR';
+                    utterance.rate = 0.9;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+        }
+        
+        animationId = requestAnimationFrame(animate);
+    }
+
+    // Fonctions Auth
+    function showAuthTab(tab) {
+        vibrateClick();
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+        if (tab === 'login') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('loginForm').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('registerForm').classList.add('active');
+        }
+    }
+
+    async function register() {
+        vibrateClick();
+        const name = document.getElementById('regName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const country = document.getElementById('regCountry').value;
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
+        const errorDiv = document.getElementById('registerError');
+
+        if (!name || !phone || !password) {
+            errorDiv.textContent = 'Tous les champs sont obligatoires';
+            return;
+        }
+        if (password.length !== 8 || !/^\d+$/.test(password)) {
+            errorDiv.textContent = 'Le mot de passe doit contenir exactement 8 chiffres';
+            return;
+        }
+        if (password !== confirmPassword) {
+            errorDiv.textContent = 'Les mots de passe ne correspondent pas';
+            return;
+        }
+
+        try {
+            const existing = await db.collection('users').where('phone', '==', phone).get();
+            if (!existing.empty) {
+                errorDiv.textContent = 'Ce numéro est déjà inscrit';
+                return;
+            }
+
+            const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            await db.collection('users').doc(userId).set({
+                userId, name, phone, country, password,
+                balance: 0, totalGains: 0, totalLosses: 0, gameCount: 0,
+                status: 'active',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            localStorage.setItem('dubai_user', JSON.stringify({ userId, name, phone, balance: 0 }));
+            errorDiv.style.color = '#7effdb';
+            errorDiv.textContent = '✅ Inscription réussie ! Redirection...';
+            setTimeout(() => loadGame(), 1500);
+        } catch (error) {
+            errorDiv.textContent = 'Erreur: ' + error.message;
+        }
+    }
+
+    async function login() {
+        vibrateClick();
+        const phone = document.getElementById('loginPhone').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorDiv = document.getElementById('loginError');
+
+        if (!phone || !password) {
+            errorDiv.textContent = 'Veuillez remplir tous les champs';
+            return;
+        }
+
+        try {
+            const users = await db.collection('users')
+                .where('phone', '==', phone)
+                .where('password', '==', password)
+                .get();
+
+            if (users.empty) {
+                errorDiv.textContent = 'Numéro ou mot de passe incorrect';
+                return;
+            }
+
+            const userData = users.docs[0].data();
+            if (userData.status === 'banned') {
+                errorDiv.textContent = 'Compte désactivé. Contactez l\'administrateur.';
+                return;
+            }
+
+            localStorage.setItem('dubai_user', JSON.stringify({
+                userId: userData.userId,
+                name: userData.name,
+                phone: userData.phone,
+                balance: userData.balance || 0
+            }));
+
+            errorDiv.style.color = '#7effdb';
+            errorDiv.textContent = '✅ Connexion réussie !';
+            setTimeout(() => loadGame(), 1000);
+        } catch (error) {
+            errorDiv.textContent = 'Erreur: ' + error.message;
+        }
+    }
+
+    function logout() {
+        vibrateClick();
+        if (animationId) cancelAnimationFrame(animationId);
+        localStorage.removeItem('dubai_user');
+        location.reload();
+    }
+
+    async function requestDeposit() {
+        vibrateClick();
+        let amount = parseFloat(document.getElementById('depositAmount').value);
+        const transferCode = document.getElementById('depositCode').value.trim();
+        
+        if (isNaN(amount) || amount < 1000) {
+            alert("⚠️ Montant minimum : 1 000 FCFA");
+            vibrateLose();
+            return;
+        }
+        if (!transferCode) {
+            alert("⚠️ Veuillez entrer le CODE D'ENVOI !");
+            vibrateLose();
+            document.getElementById('depositCode').focus();
+            return;
+        }
+        
+        amount = Math.floor(amount);
+        
+        await db.collection('depositRequests').add({
+            userId: currentUser.userId,
+            userName: currentUser.name,
+            userPhone: currentUser.phone,
+            amount, transferCode,
+            paymentMethod: "Amanata",
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        vibrateWin();
+        alert(`✅ Demande de dépôt de ${amount.toLocaleString('fr-FR')} FCFA envoyée !\n🔑 Code: ${transferCode}`);
+        document.getElementById('depositModal').style.display = 'none';
+        document.getElementById('depositAmount').value = '';
+        document.getElementById('depositCode').value = '';
+    }
+
+    async function requestWithdraw() {
+        vibrateClick();
+        let amount = parseFloat(document.getElementById('withdrawAmount').value);
+        
+        if (isNaN(amount) || amount < 1500) {
+            alert("⚠️ Montant minimum : 1 500 FCFA");
+            vibrateLose();
+            return;
+        }
+        if (amount > 50000) {
+            alert("⚠️ Montant maximum : 50 000 FCFA");
+            vibrateLose();
+            return;
+        }
+        if (amount > balance) {
+            alert("❌ Solde insuffisant !");
+            vibrateLose();
+            return;
+        }
+        
+        amount = Math.floor(amount);
+        
+        await db.collection('withdrawRequests').add({
+            userId: currentUser.userId,
+            userName: currentUser.name,
+            userPhone: currentUser.phone,
+            amount, method: "Amanata",
+            account: currentUser.phone,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        vibrateWin();
+        alert(`✅ Demande de retrait de ${amount.toLocaleString('fr-FR')} FCFA envoyée !`);
+        document.getElementById('withdrawModal').style.display = 'none';
+        document.getElementById('withdrawAmount').value = '';
+    }
+
+    function updateGameUI() {
+        document.getElementById('balanceAmount').innerHTML = Math.floor(balance).toLocaleString('fr-FR');
+        document.getElementById('totalGains').innerHTML = Math.floor(totalGains).toLocaleString('fr-FR') + " FCFA";
+        document.getElementById('totalLosses').innerHTML = Math.floor(totalLosses).toLocaleString('fr-FR') + " FCFA";
+        document.getElementById('betValue').innerHTML = currentBet.toLocaleString('fr-FR');
+        document.getElementById('showBalanceModal').innerHTML = Math.floor(balance).toLocaleString('fr-FR') + " FCFA";
+        document.getElementById('userName').innerHTML = `👤 ${currentUser.name}`;
+        document.getElementById('gameCountDisplay').innerHTML = gameCount;
+    }
+
+    async function loadGame() {
+        const savedUser = localStorage.getItem('dubai_user');
+        if (!savedUser) {
+            document.getElementById('authPage').style.display = 'block';
+            document.getElementById('gamePage').style.display = 'none';
+            return;
+        }
+        
+        currentUser = JSON.parse(savedUser);
+        
+        try {
+            const doc = await db.collection('users').doc(currentUser.userId).get();
+            if (doc.exists) {
+                const data = doc.data();
+                balance = data.balance || 0;
+                totalGains = data.totalGains || 0;
+                totalLosses = data.totalLosses || 0;
+                gameCount = data.gameCount || 0;
+                currentUser.name = data.name;
+                currentUser.phone = data.phone;
+            }
+            
+            db.collection('users').doc(currentUser.userId).onSnapshot((doc) => {
+                if (doc.exists && !isSpinning) {
+                    balance = doc.data().balance || 0;
+                    totalGains = doc.data().totalGains || 0;
+                    totalLosses = doc.data().totalLosses || 0;
+                    gameCount = doc.data().gameCount || 0;
+                    updateGameUI();
+                }
+            });
+            
+            updateGameUI();
+            document.getElementById('authPage').style.display = 'none';
+            document.getElementById('gamePage').style.display = 'block';
+            
+            const canvas = document.getElementById('wheelCanvas');
+            function resizeCanvas() {
+                const size = Math.min(window.innerWidth * 0.7, 380);
+                canvas.width = 500; canvas.height = 500;
+                canvas.style.width = `${size}px`; canvas.style.height = `${size}px`;
+                drawWheel(currentRotation);
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        } catch (error) {
+            console.error(error);
+            document.getElementById('authPage').style.display = 'block';
+            document.getElementById('gamePage').style.display = 'none';
+        }
+    }
+
+    // INITIALISATION
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedUser = localStorage.getItem('dubai_user');
+        if (savedUser) {
+            loadGame();
+        } else {
+            document.getElementById('authPage').style.display = 'block';
+            document.getElementById('gamePage').style.display = 'none';
+        }
+        
+        document.getElementById('decBet')?.addEventListener('click', () => {
+            if (!isSpinning && currentBet > 50) {
+                currentBet -= 50;
+                vibrateClick();
+                updateGameUI();
+            }
+        });
+        document.getElementById('incBet')?.addEventListener('click', () => {
+            if (!isSpinning && currentBet < 50000) {
+                currentBet += 50;
+                vibrateClick();
+                updateGameUI();
+            }
+        });
+        document.getElementById('spinBtn')?.addEventListener('click', spinGame);
+        document.getElementById('depositBtn')?.addEventListener('click', () => {
+            vibrateClick();
+            document.getElementById('depositModal').style.display = 'flex';
+        });
+        document.getElementById('withdrawBtn')?.addEventListener('click', () => {
+            vibrateClick();
+            document.getElementById('withdrawModal').style.display = 'flex';
+        });
+        document.getElementById('closeDepositModal')?.addEventListener('click', () => {
+            vibrateClick();
+            document.getElementById('depositModal').style.display = 'none';
+        });
+        document.getElementById('closeWithdrawModal')?.addEventListener('click', () => {
+            vibrateClick();
+            document.getElementById('withdrawModal').style.display = 'none';
+        });
+        document.getElementById('confirmDepositBtn')?.addEventListener('click', requestDeposit);
+        document.getElementById('confirmWithdrawBtn')?.addEventListener('click', requestWithdraw);
+        
+        window.onclick = (e) => {
+            if (e.target === document.getElementById('depositModal')) {
+                document.getElementById('depositModal').style.display = 'none';
+            }
+            if (e.target === document.getElementById('withdrawModal')) {
+                document.getElementById('withdrawModal').style.display = 'none';
+            }
+        };
+    });
+</script>
+</body>
+</html>
