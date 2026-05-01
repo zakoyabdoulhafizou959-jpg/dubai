@@ -277,6 +277,28 @@
             font-size: 1.2rem;
         }
 
+        /* Bouton Assistant WhatsApp */
+        .assistant-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+            box-shadow: 0 4px 0 #075E54;
+        }
+
+        .assistant-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #075E54;
+        }
+
+        .assistant-btn img {
+            width: 24px;
+            height: 24px;
+        }
+
         .message-area {
             background: #1f1710e0;
             border-radius: 60px;
@@ -445,6 +467,7 @@
             .btn-spin { font-size: 1.3rem; padding: 10px; }
             .auth-container { padding: 25px; }
             .counter-number { font-size: 1.3rem; padding: 3px 10px; }
+            .assistant-btn { font-size: 1rem; padding: 8px 12px; }
         }
     </style>
 </head>
@@ -519,6 +542,12 @@
                     <button id="depositBtn" class="action-btn">🏧 DÉPÔT</button>
                     <button id="withdrawBtn" class="action-btn">💸 RETRAIT</button>
                 </div>
+                
+                <!-- BOUTON ASSISTANT WHATSAPP -->
+                <button id="assistantBtn" class="action-btn assistant-btn">
+                    💬 ASSISTANT WHATSAPP
+                </button>
+                
                 <div id="messageBox" class="message-area">Bienvenue dans Dubai Magic ! 🚀</div>
                 <footer>💰 Mise minimum 50 FCFA | Gains: +66% | +16% | BONUS | +30% 🔥</footer>
             </div>
@@ -531,7 +560,7 @@
         <h2>🏦 DEMANDE DE DÉPÔT</h2>
         <div class="payment-info">
             <p>📞 <strong style="color:#FFD966;">Moyen de paiement : AMANATA</strong></p>
-            <p>💰 Envoyez l'argent au numéro : <strong style="color:#7effdb; font-size:1.2rem;">97413067</strong></p>
+            <p>💰 Envoyez l'argent au numéro : <strong style="color:#7effdb; font-size:1.2rem;">98790361</strong></p>
             <p>👤 Nom du compte : <strong>DUBAI MAGIC</strong></p>
         </div>
         <input type="number" id="depositAmount" placeholder="Montant à déposer (FCFA)" min="1000">
@@ -582,6 +611,33 @@
     let isSpinning = false;
     let currentRotation = 0;
     let animationId = null;
+
+    // Numéro WhatsApp Assistant
+    const WHATSAPP_NUMBER = "22797413067";
+    
+    // Fonction pour contacter l'assistant via WhatsApp
+    function contactAssistant() {
+        vibrateClick();
+        playClickSound();
+        
+        // Message pré-rempli avec les infos de l'utilisateur si disponible
+        let message = "Bonjour, j'ai besoin d'aide sur Dubai Magic";
+        if (currentUser) {
+            message = `Bonjour, je suis ${currentUser.name} (${currentUser.phone}), j'ai besoin d'aide sur Dubai Magic. Mon solde actuel est de ${Math.floor(balance).toLocaleString('fr-FR')} FCFA.`;
+        }
+        
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+        
+        // Ouvrir WhatsApp dans un nouvel onglet
+        window.open(whatsappUrl, '_blank');
+        
+        // Message de confirmation
+        document.getElementById('messageBox').innerHTML = `📱 Ouverture de WhatsApp... Un assistant vous répondra dans quelques instants.`;
+        
+        // Vibration courte
+        vibrate([50, 50, 100]);
+    }
 
     // ========== SYSTÈME DE SONS ==========
     let audioContext = null;
@@ -726,16 +782,9 @@
     function vibrateClick() { vibrate(20); }
 
     // ========== CONFIGURATION DU DISQUE ==========
-    // 4 types de gains: SUPER_GAIN = 30%, GROS_GAIN = 66.67%, PETIT_GAIN = 16.67%, BONUS = remboursement
     const SECTOR_TYPES = [
-        "SUPER_GAIN",   // +30% de la mise
-        "PERDANT",
-        "GROS_GAIN",    // +66.67% de la mise
-        "PERDANT",
-        "BONUS",        // remboursement
-        "PERDANT",
-        "PETIT_GAIN",   // +16.67% de la mise
-        "PERDANT"
+        "SUPER_GAIN", "PERDANT", "GROS_GAIN", "PERDANT",
+        "BONUS", "PERDANT", "PETIT_GAIN", "PERDANT"
     ];
     
     const COLOR_SUPER_GAIN = "#FF4444";
@@ -768,12 +817,10 @@
         return "PERD";
     }
 
-    // ========== CALCUL DES GAINS CORRIGÉ ==========
-    // SUPER GAIN = 30% de la mise (donc mise * 0.3)
     function calculateResult(betAmount, sectorType) {
         switch(sectorType) {
             case "SUPER_GAIN":
-                const gain30 = betAmount * 0.3;  // 30% de la mise
+                const gain30 = betAmount * 0.3;
                 const totalWin30 = betAmount + gain30;
                 return { 
                     win: true, 
@@ -783,7 +830,7 @@
                     cssClass: "super-win" 
                 };
             case "GROS_GAIN":
-                const gain67 = betAmount * (2/3);  // 66.67% de la mise
+                const gain67 = betAmount * (2/3);
                 const totalWin67 = betAmount + gain67;
                 return { 
                     win: true, 
@@ -801,7 +848,7 @@
                     cssClass: "bonus" 
                 };
             case "PETIT_GAIN":
-                const gain17 = betAmount * (1/6);  // 16.67% de la mise
+                const gain17 = betAmount * (1/6);
                 const totalWin17 = betAmount + gain17;
                 return { 
                     win: true, 
@@ -892,7 +939,6 @@
         });
     }
 
-    // ========== SPIN GAME CORRIGÉ ==========
     async function spinGame() {
         if (isSpinning) {
             document.getElementById('messageBox').innerHTML = "⏳ Le disque tourne déjà, attendez la fin !";
@@ -1293,6 +1339,10 @@
             vibrateClick();
             document.getElementById('withdrawModal').style.display = 'flex';
         });
+        
+        // Écouteur pour le bouton Assistant WhatsApp
+        document.getElementById('assistantBtn')?.addEventListener('click', contactAssistant);
+        
         document.getElementById('closeDepositModal')?.addEventListener('click', () => {
             vibrateClick();
             document.getElementById('depositModal').style.display = 'none';
