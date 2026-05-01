@@ -427,7 +427,6 @@
             font-size: 0.9rem;
         }
 
-        /* Animation de vibration CSS */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
@@ -485,7 +484,7 @@
                 <button onclick="register()">S'inscrire</button>
                 <div id="registerError" class="error-msg"></div>
             </div>
-            <div class="info-text">⚠️ Mot de passe : 8 chiffres uniquement<br>💰 Mise minimum : 50 FCFA | Gain possible x33</div>
+            <div class="info-text">⚠️ Mot de passe : 8 chiffres uniquement<br>💰 Mise minimum : 50 FCFA</div>
         </div>
     </div>
 
@@ -520,8 +519,8 @@
                     <button id="depositBtn" class="action-btn">🏧 DÉPÔT</button>
                     <button id="withdrawBtn" class="action-btn">💸 RETRAIT</button>
                 </div>
-                <div id="messageBox" class="message-area">Bienvenue dans Dubai Magic ! Gains jusqu'à x33 🚀</div>
-                <footer>💰 Mise minimum 50 FCFA | +66% | +16% | BONUS | x33 🔥</footer>
+                <div id="messageBox" class="message-area">Bienvenue dans Dubai Magic ! 🚀</div>
+                <footer>💰 Mise minimum 50 FCFA | Gains: +66% | +16% | BONUS | +30% 🔥</footer>
             </div>
         </div>
     </div>
@@ -584,25 +583,19 @@
     let currentRotation = 0;
     let animationId = null;
 
-    // ========== SYSTÈME DE SONS (Web Audio API) ==========
+    // ========== SYSTÈME DE SONS ==========
     let audioContext = null;
     
-    // Initialiser l'audio (nécessite une interaction utilisateur)
     function initAudio() {
         if (!audioContext && window.AudioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
     }
     
-    // Jouer un son de clic
     function playClickSound() {
         try {
-            if (!audioContext) {
-                initAudio();
-            }
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+            if (!audioContext) initAudio();
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             oscillator.connect(gainNode);
@@ -613,19 +606,13 @@
             oscillator.start();
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.3);
             oscillator.stop(audioContext.currentTime + 0.3);
-        } catch(e) { console.log("Audio non disponible"); }
+        } catch(e) {}
     }
     
-    // Son de victoire (gros gain)
     function playWinSound() {
         try {
-            if (!audioContext) {
-                initAudio();
-            }
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            // Son de victoire - mélodie simple
+            if (!audioContext) initAudio();
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             const frequencies = [523.25, 659.25, 783.99];
             frequencies.forEach((freq, index) => {
                 const oscillator = audioContext.createOscillator();
@@ -639,18 +626,13 @@
                 gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + index * 0.15 + 0.5);
                 oscillator.stop(audioContext.currentTime + index * 0.15 + 0.5);
             });
-        } catch(e) { console.log("Audio non disponible"); }
+        } catch(e) {}
     }
     
-    // Son de perte
     function playLoseSound() {
         try {
-            if (!audioContext) {
-                initAudio();
-            }
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+            if (!audioContext) initAudio();
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             oscillator.connect(gainNode);
@@ -661,19 +643,13 @@
             oscillator.start();
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
             oscillator.stop(audioContext.currentTime + 0.5);
-        } catch(e) { console.log("Audio non disponible"); }
+        } catch(e) {}
     }
     
-    // Son super gain (x33)
     function playSuperWinSound() {
         try {
-            if (!audioContext) {
-                initAudio();
-            }
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            // Fanfare de victoire
+            if (!audioContext) initAudio();
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             const frequencies = [523.25, 659.25, 783.99, 1046.50];
             frequencies.forEach((freq, index) => {
                 const oscillator = audioContext.createOscillator();
@@ -687,18 +663,13 @@
                 gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + index * 0.12 + 0.8);
                 oscillator.stop(audioContext.currentTime + index * 0.12 + 0.8);
             });
-        } catch(e) { console.log("Audio non disponible"); }
+        } catch(e) {}
     }
     
-    // Son bonus
     function playBonusSound() {
         try {
-            if (!audioContext) {
-                initAudio();
-            }
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+            if (!audioContext) initAudio();
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             oscillator.connect(gainNode);
@@ -709,7 +680,6 @@
             oscillator.start();
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.4);
             oscillator.stop(audioContext.currentTime + 0.4);
-            // Deuxième note
             setTimeout(() => {
                 const osc2 = audioContext.createOscillator();
                 const gain2 = audioContext.createGain();
@@ -722,18 +692,13 @@
                 gain2.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.4);
                 osc2.stop(audioContext.currentTime + 0.4);
             }, 200);
-        } catch(e) { console.log("Audio non disponible"); }
+        } catch(e) {}
     }
     
-    // Son de rotation (début du spin)
     function playSpinSound() {
         try {
-            if (!audioContext) {
-                initAudio();
-            }
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
+            if (!audioContext) initAudio();
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             oscillator.connect(gainNode);
@@ -744,45 +709,33 @@
             oscillator.start();
             gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.2);
             oscillator.stop(audioContext.currentTime + 0.2);
-        } catch(e) { console.log("Audio non disponible"); }
+        } catch(e) {}
     }
     
-    // ========== FONCTION VIBRATION ==========
+    // ========== VIBRATIONS ==========
     function vibrate(pattern) {
         if (window.navigator && window.navigator.vibrate) {
             window.navigator.vibrate(pattern);
         }
     }
     
-    // Vibration pour perte
-    function vibrateLose() {
-        vibrate([100, 50, 100]);
-    }
-    
-    // Vibration pour gain
-    function vibrateWin() {
-        vibrate([100, 50, 200, 50, 100]);
-    }
-    
-    // Vibration super gain
-    function vibrateSuperWin() {
-        vibrate([200, 100, 200, 100, 300, 100, 200]);
-    }
-    
-    // Vibration bonus
-    function vibrateBonus() {
-        vibrate([80, 80, 80]);
-    }
-    
-    // Vibration clic
-    function vibrateClick() {
-        vibrate(20);
-    }
+    function vibrateLose() { vibrate([100, 50, 100]); }
+    function vibrateWin() { vibrate([100, 50, 200, 50, 100]); }
+    function vibrateSuperWin() { vibrate([200, 100, 200, 100, 300, 100, 200]); }
+    function vibrateBonus() { vibrate([80, 80, 80]); }
+    function vibrateClick() { vibrate(20); }
 
-    // Configuration du disque
+    // ========== CONFIGURATION DU DISQUE ==========
+    // 4 types de gains: SUPER_GAIN = 30%, GROS_GAIN = 66.67%, PETIT_GAIN = 16.67%, BONUS = remboursement
     const SECTOR_TYPES = [
-        "SUPER_GAIN", "PERDANT", "GROS_GAIN", "PERDANT",
-        "BONUS", "PERDANT", "PETIT_GAIN", "PERDANT"
+        "SUPER_GAIN",   // +30% de la mise
+        "PERDANT",
+        "GROS_GAIN",    // +66.67% de la mise
+        "PERDANT",
+        "BONUS",        // remboursement
+        "PERDANT",
+        "PETIT_GAIN",   // +16.67% de la mise
+        "PERDANT"
     ];
     
     const COLOR_SUPER_GAIN = "#FF4444";
@@ -808,41 +761,63 @@
     }
 
     function getSectorLabel(type) {
-        if (type === "SUPER_GAIN") return "x33";
+        if (type === "SUPER_GAIN") return "+30%";
         if (type === "GROS_GAIN") return "+66%";
         if (type === "BONUS") return "REMB";
         if (type === "PETIT_GAIN") return "+16%";
         return "PERD";
     }
 
+    // ========== CALCUL DES GAINS CORRIGÉ ==========
+    // SUPER GAIN = 30% de la mise (donc mise * 0.3)
     function calculateResult(betAmount, sectorType) {
         switch(sectorType) {
             case "SUPER_GAIN":
-                const totalWin33 = betAmount * 33;
-                const profit33 = totalWin33 - betAmount;
-                return { win: true, delta: profit33, newBalanceChange: totalWin33, 
-                    message: `💎💎💎 SUPER GAIN x33 !!! +${profit33.toLocaleString('fr-FR')} FCFA 💎💎💎`, 
-                    cssClass: "super-win" };
+                const gain30 = betAmount * 0.3;  // 30% de la mise
+                const totalWin30 = betAmount + gain30;
+                return { 
+                    win: true, 
+                    delta: gain30, 
+                    newBalanceChange: totalWin30, 
+                    message: `💎💎💎 SUPER GAIN +30% !!! +${gain30.toLocaleString('fr-FR')} FCFA 💎💎💎`, 
+                    cssClass: "super-win" 
+                };
             case "GROS_GAIN":
-                const totalWin = betAmount * (1 + 2/3);
-                const profitGros = totalWin - betAmount;
-                return { win: true, delta: profitGros, newBalanceChange: totalWin, 
-                    message: `🏆 GROS GAIN +66% ! +${profitGros.toLocaleString('fr-FR')} FCFA 🏆`, 
-                    cssClass: "win" };
+                const gain67 = betAmount * (2/3);  // 66.67% de la mise
+                const totalWin67 = betAmount + gain67;
+                return { 
+                    win: true, 
+                    delta: gain67, 
+                    newBalanceChange: totalWin67, 
+                    message: `🏆 GROS GAIN +66.67% ! +${gain67.toLocaleString('fr-FR')} FCFA 🏆`, 
+                    cssClass: "win" 
+                };
             case "BONUS":
-                return { win: null, delta: 0, newBalanceChange: betAmount, 
+                return { 
+                    win: null, 
+                    delta: 0, 
+                    newBalanceChange: betAmount, 
                     message: `🔄 BONUS ! Remboursement intégral de ${betAmount.toLocaleString('fr-FR')} FCFA 🔄`, 
-                    cssClass: "bonus" };
+                    cssClass: "bonus" 
+                };
             case "PETIT_GAIN":
-                const smallWinAmount = betAmount * (1 + 1/6);
-                const profitSmall = smallWinAmount - betAmount;
-                return { win: true, delta: profitSmall, newBalanceChange: smallWinAmount, 
-                    message: `⭐ PETIT GAIN +16% ! +${profitSmall.toLocaleString('fr-FR')} FCFA ⭐`, 
-                    cssClass: "small-win" };
+                const gain17 = betAmount * (1/6);  // 16.67% de la mise
+                const totalWin17 = betAmount + gain17;
+                return { 
+                    win: true, 
+                    delta: gain17, 
+                    newBalanceChange: totalWin17, 
+                    message: `⭐ PETIT GAIN +16.67% ! +${gain17.toLocaleString('fr-FR')} FCFA ⭐`, 
+                    cssClass: "small-win" 
+                };
             default:
-                return { win: false, delta: -betAmount, newBalanceChange: 0, 
+                return { 
+                    win: false, 
+                    delta: -betAmount, 
+                    newBalanceChange: 0, 
                     message: `💀 PERDU ! -${betAmount.toLocaleString('fr-FR')} FCFA 💀`, 
-                    cssClass: "lose" };
+                    cssClass: "lose" 
+                };
         }
     }
 
@@ -917,7 +892,7 @@
         });
     }
 
-    // FONCTION PRINCIPALE AVEC SONS ET VIBRATIONS
+    // ========== SPIN GAME CORRIGÉ ==========
     async function spinGame() {
         if (isSpinning) {
             document.getElementById('messageBox').innerHTML = "⏳ Le disque tourne déjà, attendez la fin !";
@@ -938,13 +913,11 @@
             return;
         }
 
-        // Activer l'audio au premier clic (nécessaire sur mobile)
         initAudio();
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
         }
         
-        // Son de rotation et vibration courte
         playSpinSound();
         vibrate(50);
         
@@ -983,12 +956,11 @@
             } else {
                 animationId = null;
                 currentRotation = targetRotation;
-                drawWheel(currentRotation);
+                drawWheel(targetRotation);
                 
-                const sectorType = getCurrentSectorType(currentRotation);
+                const sectorType = getCurrentSectorType(targetRotation);
                 const result = calculateResult(currentBet, sectorType);
                 
-                // Appliquer les gains/pertes avec sons et vibrations
                 if (result.win === true) {
                     balance += result.newBalanceChange;
                     totalGains += result.delta;
@@ -1013,23 +985,20 @@
                 updateGameUI();
                 saveUserGameData();
                 
-                // Vibration et son supplémentaires pour le résultat
                 const messageDiv = document.getElementById('messageBox');
                 messageDiv.innerHTML = `${result.message}<br>💰 Nouveau solde: ${Math.floor(balance).toLocaleString('fr-FR')} FCFA<br>🎲 Parties jouées: ${gameCount}`;
                 
-                // Effet de vibration visuelle sur le message
                 messageDiv.classList.add('vibrate');
                 setTimeout(() => messageDiv.classList.remove('vibrate'), 300);
                 
                 isSpinning = false;
                 spinBtn.disabled = false;
                 
-                // Retour vocal pour les aveugles/malvoyants
                 if (window.speechSynthesis) {
                     let speechMsg = "";
-                    if (sectorType === "SUPER_GAIN") speechMsg = `SUPER GAIN ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
-                    else if (sectorType === "GROS_GAIN") speechMsg = `Gros gain ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
-                    else if (sectorType === "PETIT_GAIN") speechMsg = `Petit gain ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
+                    if (sectorType === "SUPER_GAIN") speechMsg = `Super gain 30 pourcent ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
+                    else if (sectorType === "GROS_GAIN") speechMsg = `Gros gain 66 pourcent ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
+                    else if (sectorType === "PETIT_GAIN") speechMsg = `Petit gain 16 pourcent ! Vous gagnez ${result.delta.toLocaleString('fr-FR')} Francs CFA`;
                     else if (sectorType === "BONUS") speechMsg = `Bonus ! Remboursement de ${currentBet.toLocaleString('fr-FR')} Francs CFA`;
                     else speechMsg = `Perdu ! Vous perdez ${currentBet.toLocaleString('fr-FR')} Francs CFA`;
                     
@@ -1045,7 +1014,7 @@
         animationId = requestAnimationFrame(animate);
     }
 
-    // Fonctions Auth
+    // ========== FONCTIONS AUTH ==========
     function showAuthTab(tab) {
         vibrateClick();
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
