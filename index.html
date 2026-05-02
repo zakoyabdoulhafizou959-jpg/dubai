@@ -811,9 +811,9 @@
 
     function getSectorLabel(type) {
         if (type === "SUPER_GAIN") return "+30%";
-        if (type === "GROS_GAIN") return "+66%";
+        if (type === "GROS_GAIN") return "+110%";
         if (type === "BONUS") return "REMB";
-        if (type === "PETIT_GAIN") return "+16%";
+        if (type === "PETIT_GAIN") return "+20%";
         return "PERD";
     }
 
@@ -836,7 +836,7 @@
                     win: true, 
                     delta: gain67, 
                     newBalanceChange: totalWin67, 
-                    message: `🏆 GROS GAIN +66.67% ! +${gain67.toLocaleString('fr-FR')} FCFA 🏆`, 
+                    message: `🏆 GROS GAIN +110% ! +${gain67.toLocaleString('fr-FR')} FCFA 🏆`, 
                     cssClass: "win" 
                 };
             case "BONUS":
@@ -854,7 +854,7 @@
                     win: true, 
                     delta: gain17, 
                     newBalanceChange: totalWin17, 
-                    message: `⭐ PETIT GAIN +16.67% ! +${gain17.toLocaleString('fr-FR')} FCFA ⭐`, 
+                    message: `⭐ PETIT GAIN +207% ! +${gain17.toLocaleString('fr-FR')} FCFA ⭐`, 
                     cssClass: "small-win" 
                 };
             default:
